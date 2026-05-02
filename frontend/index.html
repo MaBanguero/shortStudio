@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ShortsStudio - Terminal</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #1e1e1e; color: #fff; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        input[type="text"] { width: 70%; padding: 10px; border-radius: 4px; border: none; }
+        button { padding: 10px 20px; background-color: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #terminal { background-color: #000; color: #0f0; font-family: monospace; padding: 15px; height: 400px; overflow-y: auto; margin-top: 20px; border-radius: 4px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🎬 ShortsStudio AI Pipeline</h2>
+        <div>
+            <input type="text" id="topicInput" placeholder="Escribe el tema de tu video (Ej: La historia oculta de la Mona Lisa)">
+            <button onclick="startProcess()">Generar Video</button>
+        </div>
+        <div id="terminal">Esperando instrucciones...</div>
+    </div>
+
+    <script>
+        const terminal = document.getElementById('terminal');
+        let ws;
+
+        function connectWebSocket() {
+            ws = new WebSocket(`ws://${window.location.host}/ws`);
+            ws.onmessage = function(event) {
+                terminal.innerHTML += `\n> ${event.data}`;
+                terminal.scrollTop = terminal.scrollHeight; // Auto-scroll
+            };
+            ws.onclose = function() {
+                setTimeout(connectWebSocket, 1000); // Reconnect
+            };
+        }
+
+        function startProcess() {
+            const topic = document.getElementById('topicInput').value;
+            if(!topic) return;
+            terminal.innerHTML = "> Iniciando secuencia para: " + topic;
+
+            fetch('/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topic: topic })
+            });
+        }
+
+        connectWebSocket();
+    </script>
+</body>
+</html>
