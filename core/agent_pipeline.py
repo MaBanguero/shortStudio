@@ -58,7 +58,7 @@ Return ONLY a valid JSON array of strings. No markdown formatting, no explanatio
 
 def load_llm():
     ws_logger.log("🧠 Cargando LLM (Agentes) en VRAM (Precisión Nativa bfloat16)...")
-    model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
+    model_id = "meta-llama/Llama-3.2-3B-Instruct"
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
 
