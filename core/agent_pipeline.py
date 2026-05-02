@@ -76,13 +76,22 @@ def generate_script_json(topic: str):
         ws_logger.log("🤖 Agente 4 (Prompt Engineer): Generando JSON estricto para CogVideoX...")
         json_raw = run_inference(model, tokenizer, PROMPT_AGENTE_4, annotated_script)
 
-        # Limpiar posible markdown en la salida del JSON
-        json_clean = re.sub(r'```json\n|\n```|```', '', json_raw).strip()
-        prompts_array = json.loads(json_clean)
-        ws_logger.log(f"✅ JSON validado: {len(prompts_array)} escenas generadas.")
+        start_idx = json_raw.find('[')
+        end_idx = json_raw.rfind(']')
 
-        return prompts_array
-
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            json_clean = json_raw[start_idx:end_idx + 1]
+            try:
+                prompts_array = json.loads(json_clean)
+                ws_logger.log(f"✅ JSON validado: {len(prompts_array)} escenas generadas.")
+                return prompts_array
+            except json.JSONDecodeError as e:
+                ws_logger.log(f"❌ Error al decodificar el JSON: {str(e)}")
+                print(f"\n--- JSON CRUDO ---\n{json_raw}\n------------------\n")
+                raise Exception("El formato interno del JSON generado por la IA es inválido.")
+        else:
+            print(f"\n--- RESPUESTA CRUDA ---\n{json_raw}\n------------------\n")
+            raise Exception("La IA no devolvió un arreglo JSON ([...]).")
     finally:
         # CRÍTICO: Liberar VRAM
         ws_logger.log("🧹 Limpiando VRAM: Descargando LLM...")
