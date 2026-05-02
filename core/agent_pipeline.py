@@ -78,25 +78,30 @@ def run_inference(model, tokenizer, prompt_system, prompt_user):
         {"role": "user", "content": prompt_user}
     ]
 
-    # Aplicar template y tokenizar de forma segura para evitar KeyError: 'shape'
+    # Aplicar template
     prompt_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
     inputs = tokenizer(prompt_text, return_tensors="pt").to(model.device)
 
-    terminators = [
+    # --- LA MAGIA ESTÁ AQUÍ ---
+    raw_terminators = [
         tokenizer.eos_token_id,
         tokenizer.convert_tokens_to_ids("<|eot_id|>")
     ]
+    # Filtramos la lista para quitar cualquier 'None'
+    terminators = [t for t in raw_terminators if t is not None]
+
+    # Manejo seguro del pad_token
     pad_token = tokenizer.eos_token_id if isinstance(tokenizer.eos_token_id, int) else 128001
 
     outputs = model.generate(
         **inputs,
-        max_new_tokens=4096,  # Aumentado un poco porque 24 escenas pueden ser largas
+        max_new_tokens=4096,
         eos_token_id=terminators,
-        pad_token_id=pad_token
+        pad_token_id=pad_token,
+        use_cache=True  # Acelera la generación
     )
 
     input_length = inputs["input_ids"].shape[-1]
-    # clean_up_tokenization_spaces=False evita el warning molesto en la consola
     response = tokenizer.decode(outputs[0][input_length:], skip_special_tokens=True, clean_up_tokenization_spaces=False)
 
     return response
