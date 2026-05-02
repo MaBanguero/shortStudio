@@ -88,7 +88,7 @@ def run_inference(model, tokenizer, prompt_system, prompt_user):
 
     outputs = model.generate(
         **inputs,
-        max_new_tokens=2500,  # Aumentado un poco porque 24 escenas pueden ser largas
+        max_new_tokens=8192,  # Aumentado un poco porque 24 escenas pueden ser largas
         eos_token_id=terminators,
         pad_token_id=pad_token
     )
