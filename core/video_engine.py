@@ -2,6 +2,7 @@ import torch
 import gc
 from diffusers import CogVideoXPipeline
 from transformers import BitsAndBytesConfig
+from diffusers.utils import export_to_video
 from core.logger_ws import ws_logger
 
 
@@ -35,7 +36,7 @@ def generate_video_clips(prompts_array: list, project_id: str):
 
             # Guardar clip
             # Nota: Necesitas la utilidad export_to_video de diffusers.utils
-            from diffusers.utils import export_to_video
+
             output_path = f"outputs/{project_id}_scene_{scene_num:02d}.mp4"
             export_to_video(video, output_path, fps=8)
             ws_logger.log(f"💾 Clip {scene_num} guardado en {output_path}")

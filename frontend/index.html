@@ -2,44 +2,97 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ShortsStudio - Terminal</title>
+    <title>ShortsStudio - Terminal & Player</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #1e1e1e; color: #fff; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        input[type="text"] { width: 70%; padding: 10px; border-radius: 4px; border: none; }
-        button { padding: 10px 20px; background-color: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        #terminal { background-color: #000; color: #0f0; font-family: monospace; padding: 15px; height: 400px; overflow-y: auto; margin-top: 20px; border-radius: 4px; white-space: pre-wrap; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 20px; }
+        .input-group { display: flex; gap: 10px; width: 100%; }
+        input[type="text"] { flex-grow: 1; padding: 12px; border-radius: 6px; border: 1px solid #333; background-color: #1e1e1e; color: white; font-size: 16px; }
+        button { padding: 12px 24px; background-color: #00bcd4; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; transition: background-color 0.3s; }
+        button:hover { background-color: #00acc1; }
+        #terminal { background-color: #000; color: #00ff00; font-family: 'Courier New', Courier, monospace; padding: 15px; height: 350px; overflow-y: auto; border-radius: 6px; border: 1px solid #333; white-space: pre-wrap; font-size: 14px; box-shadow: inset 0 0 10px rgba(0,0,0,0.8); }
+
+        /* Estilos para el reproductor de video */
+        #videoContainer { display: none; margin-top: 20px; text-align: center; background-color: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; }
+        video { max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h3 { color: #00bcd4; margin-top: 0; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>🎬 ShortsStudio AI Pipeline</h2>
-        <div>
-            <input type="text" id="topicInput" placeholder="Escribe el tema de tu video (Ej: La historia oculta de la Mona Lisa)">
-            <button onclick="startProcess()">Generar Video</button>
+        <h2>🎬 ShortsStudio Engine</h2>
+        <div class="input-group">
+            <input type="text" id="topicInput" placeholder="Describe la idea de tu video (Ej: ¿Qué pasaría si la gravedad desapareciera por 5 segundos?)">
+            <button onclick="startProcess()" id="generateBtn">Crear Corto</button>
         </div>
+
         <div id="terminal">Esperando instrucciones...</div>
+
+        <!-- Contenedor del video, oculto por defecto -->
+        <div id="videoContainer">
+            <h3>✨ ¡Tu Short está listo! ✨</h3>
+            <video id="resultVideo" controls controlsList="nodownload"></video>
+            <br><br>
+            <a id="downloadLink" href="#" download>
+                <button style="background-color: #4CAF50; color: white;">Descargar Video</button>
+            </a>
+        </div>
     </div>
 
     <script>
         const terminal = document.getElementById('terminal');
+        const videoContainer = document.getElementById('videoContainer');
+        const resultVideo = document.getElementById('resultVideo');
+        const downloadLink = document.getElementById('downloadLink');
+        const generateBtn = document.getElementById('generateBtn');
         let ws;
 
         function connectWebSocket() {
             ws = new WebSocket(`ws://${window.location.host}/ws`);
+
             ws.onmessage = function(event) {
-                terminal.innerHTML += `\n> ${event.data}`;
-                terminal.scrollTop = terminal.scrollHeight; // Auto-scroll
+                const msg = event.data;
+
+                // Interceptar mensaje de finalización
+                if (msg.startsWith("[VIDEO_READY]:")) {
+                    const videoPath = msg.split(":")[1].trim();
+                    showVideo(videoPath);
+                } else {
+                    terminal.innerHTML += `\nroot@shorts-engine:~# ${msg}`;
+                    terminal.scrollTop = terminal.scrollHeight;
+                }
             };
+
             ws.onclose = function() {
-                setTimeout(connectWebSocket, 1000); // Reconnect
+                setTimeout(connectWebSocket, 2000);
             };
+        }
+
+        function showVideo(path) {
+            // Habilitar de nuevo el botón
+            generateBtn.disabled = false;
+            generateBtn.innerText = "Crear Nuevo Corto";
+
+            // Configurar y mostrar el video
+            // El backend debe servir los archivos estáticos desde /outputs
+            resultVideo.src = `/${path}`;
+            downloadLink.href = `/${path}`;
+            downloadLink.setAttribute('download', path.split('/').pop());
+
+            videoContainer.style.display = 'block';
+            terminal.innerHTML += `\nroot@shorts-engine:~# 🟩 PROCESO FINALIZADO. Video entregado en la interfaz.`;
+            terminal.scrollTop = terminal.scrollHeight;
         }
 
         function startProcess() {
             const topic = document.getElementById('topicInput').value;
             if(!topic) return;
-            terminal.innerHTML = "> Iniciando secuencia para: " + topic;
+
+            // Resetear UI
+            videoContainer.style.display = 'none';
+            generateBtn.disabled = true;
+            generateBtn.innerText = "Procesando...";
+            terminal.innerHTML = `root@shorts-engine:~# Iniciando secuencia para: ${topic}`;
 
             fetch('/generate', {
                 method: 'POST',
