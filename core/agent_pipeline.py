@@ -57,14 +57,15 @@ Return ONLY a valid JSON array of strings. No markdown formatting, no explanatio
 # ==========================================
 
 def load_llm():
-    ws_logger.log("🧠 Cargando LLM (Agentes) en VRAM (4-bits)...")
-    quant_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16)
+    ws_logger.log("🧠 Cargando LLM (Agentes) en VRAM (Precisión Nativa bfloat16)...")
     model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
+
+    # Cargamos el modelo sin cuantizar, directo a la GPU aprovechando los 24GB
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
-        quantization_config=quant_config,
+        torch_dtype=torch.bfloat16, # Formato ultra rápido y nativo para Llama 3
         device_map="auto"
     )
     return model, tokenizer
