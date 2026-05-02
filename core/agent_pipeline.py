@@ -15,7 +15,7 @@ PROMPT_AGENTE_4 = """You are an elite AI Video Prompt Engineer... [Inserta tu pr
 def load_llm():
     ws_logger.log("🧠 Cargando LLM (Agentes) en VRAM (4-bits)...")
     quant_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16)
-    model_id = "meta-llama/Meta-Llama-3-8B-Instruct"  # Asegúrate de tener acceso en HuggingFace o usa uno abierto
+    model_id = "meta-llama/Meta-Llama-3.1-8B-Instruct"  # Asegúrate de tener acceso en HuggingFace o usa uno abierto
 
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=quant_config, device_map="auto")
