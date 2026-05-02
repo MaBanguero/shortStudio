@@ -66,7 +66,7 @@ def load_llm():
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         torch_dtype=torch.bfloat16, # Formato ultra rápido y nativo para Llama 3
-        device_map="vuda",
+        device_map="cuda",
         attn_implementation="flash_attention_2"
     )
     return model, tokenizer
