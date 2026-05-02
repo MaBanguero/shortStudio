@@ -66,7 +66,8 @@ def load_llm():
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         torch_dtype=torch.bfloat16, # Formato ultra rápido y nativo para Llama 3
-        device_map="auto"
+        device_map="vuda",
+        attn_implementation="flash_attention_2"
     )
     return model, tokenizer
 
@@ -89,7 +90,7 @@ def run_inference(model, tokenizer, prompt_system, prompt_user):
 
     outputs = model.generate(
         **inputs,
-        max_new_tokens=8192,  # Aumentado un poco porque 24 escenas pueden ser largas
+        max_new_tokens=4096,  # Aumentado un poco porque 24 escenas pueden ser largas
         eos_token_id=terminators,
         pad_token_id=pad_token
     )
