@@ -3,6 +3,7 @@ import uuid
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
+import traceback
 import asyncio
 import concurrent.futures
 
@@ -47,7 +48,9 @@ def run_full_pipeline(topic: str, project_id: str):
 
         ws_logger.log(f"🎉 ¡Proyecto {project_id} finalizado exitosamente!")
     except Exception as e:
+        error_trace = traceback.format_exc()
         ws_logger.log(f"❌ ERROR CRÍTICO: {str(e)}")
+        print(f"\n--- DETALLE DEL ERROR ---\n{error_trace}\n-----------------------\n")
 
 
 @app.post("/generate")
