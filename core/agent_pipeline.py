@@ -27,12 +27,31 @@ def run_inference(model, tokenizer, prompt_system, prompt_user):
         {"role": "system", "content": prompt_system},
         {"role": "user", "content": prompt_user}
     ]
-    input_ids = tokenizer.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt").to(
-        model.device)
-    outputs = model.generate(input_ids, max_new_tokens=2048, pad_token_id=tokenizer.eos_token_id)
+
+    input_ids = tokenizer.apply_chat_template(
+        messages,
+        add_generation_prompt=True,
+        return_tensors="pt"
+    ).to(model.device)
+
+    # Llama 3.1 requiere estos terminadores específicos
+    terminators = [
+        tokenizer.eos_token_id,
+        tokenizer.convert_tokens_to_ids("<|eot_id|>")
+    ]
+
+    # Manejo seguro del pad_token (el ID 128001 es el end_of_text en Llama 3)
+    pad_token = tokenizer.eos_token_id if isinstance(tokenizer.eos_token_id, int) else 128001
+
+    outputs = model.generate(
+        input_ids,
+        max_new_tokens=2048,
+        eos_token_id=terminators,
+        pad_token_id=pad_token
+    )
+
     response = tokenizer.decode(outputs[0][input_ids.shape[-1]:], skip_special_tokens=True)
     return response
-
 
 def generate_script_json(topic: str):
     model, tokenizer = load_llm()
