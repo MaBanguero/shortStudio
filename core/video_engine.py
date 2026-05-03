@@ -33,15 +33,22 @@ def generate_video_clips(prompts_array: list, project_id: str):
             scene_num = index + 1
             ws_logger.log(f"🎞️ Generando Clip {scene_num}/{total_clips} (6 segundos)...")
 
-            # CogVideoX necesita un solo string, extraemos la info de nuestro JSON
-            prompt_text = f"{scene.get('camera', '')}. {scene.get('action', '')}. Location: {scene.get('location', '')}. Character: {scene.get('character', '')}. {scene.get('mouth', '')}. {scene.get('dialogue', '')}."
+            # --- MANEJO INTELIGENTE DEL TIPO DE DATO ---
+            if isinstance(scene, dict):
+                # Si la IA devolvió un diccionario con llaves
+                prompt_text = f"{scene.get('camera', '')}. {scene.get('action', '')}. Location: {scene.get('location', '')}. Character: {scene.get('character', '')}. {scene.get('mouth', '')}. {scene.get('dialogue', '')}."
+            else:
+                # Si la IA devolvió un string de texto directo (como lo ordenaba el prompt)
+                prompt_text = str(scene).strip()
+            # ------------------------------------------
+
             ws_logger.log(f"📝 Prompt: {prompt_text[:80]}...")
 
             # Generación del video
             video = pipe(
                 prompt=prompt_text,
                 num_frames=49,
-                num_inference_steps=25,  # Puedes subirlo a 50 después si quieres más calidad y tienes tiempo
+                num_inference_steps=25,
                 guidance_scale=6.0
             ).frames[0]
 

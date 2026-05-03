@@ -12,3 +12,5 @@ boto3==1.34.0
 sentencepiece
 numpy<2.0.0
 huggingface_hub>=0.25.0
+tiktoken
+protobuf
